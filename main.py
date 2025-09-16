@@ -10,6 +10,7 @@ Usage:
     
 Available utilities:
     fetch_followers    - Fetch and sort Twitter followers by follower count
+    scrape_followers   - Scrape Twitter followers using Stagehand browser automation
     help              - Show this help message
 """
 
@@ -32,14 +33,21 @@ def show_help():
     print("                      sorts them by their follower count in descending order.")
     print("                      Supports both TXT and JSON output formats.")
     print()
+    print("  scrape_followers   - Scrape Twitter followers using Stagehand browser automation")
+    print("                      Uses AI-powered browser automation to scrape follower data")
+    print("                      from Twitter profiles. Requires Browserbase and AI model API keys.")
+    print("                      Supports both TXT and JSON output formats.")
+    print()
     print("  help              - Show this help message")
     print()
     print("Examples:")
     print("  python main.py fetch_followers")
+    print("  python main.py scrape_followers")
     print("  python main.py help")
     print()
     print("For more detailed information about each utility, run it directly:")
     print("  python fetch_followers.py")
+    print("  python scrape_followers.py")
 
 
 def run_fetch_followers():
@@ -55,11 +63,26 @@ def run_fetch_followers():
         print(f"❌ Error running fetch_followers utility: {e}")
 
 
+def run_scrape_followers():
+    """Run the scrape followers utility."""
+    try:
+        # Import and run the scrape followers script
+        from scrape_followers import main as scrape_followers_main
+        import asyncio
+        asyncio.run(scrape_followers_main())
+    except ImportError as e:
+        print(f"❌ Error importing scrape_followers utility: {e}")
+        print("💡 Make sure you're running from the correct directory")
+    except Exception as e:
+        print(f"❌ Error running scrape_followers utility: {e}")
+
+
 def main():
     """Main launcher function."""
     # Available utilities
     utilities: Dict[str, Callable] = {
         'fetch_followers': run_fetch_followers,
+        'scrape_followers': run_scrape_followers,
         'help': show_help,
     }
     
