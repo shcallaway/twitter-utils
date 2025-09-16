@@ -1,12 +1,12 @@
 #!/bin/bash
 
-# Twitter Followers Fetcher Setup Script
+# Twitter Utils Setup Script
 # This script sets up a virtual environment and installs dependencies
 
 set -e  # Exit on any error
 
-echo "🐦 Setting up Twitter Followers Fetcher..."
-echo "========================================"
+echo "🐦 Setting up Twitter Utils..."
+echo "============================="
 
 # Check if Python 3 is installed
 if ! command -v python3 &> /dev/null; then
@@ -54,8 +54,14 @@ echo ""
 echo "To activate the virtual environment:"
 echo "  source venv/bin/activate"
 echo ""
-echo "To run the script:"
-echo "  python main.py"
+echo "To see available utilities:"
+echo "  python main.py help"
+echo ""
+echo "To run a specific utility:"
+echo "  python main.py fetch_followers"
+echo ""
+echo "To run utilities directly:"
+echo "  python fetch_followers.py"
 echo ""
 echo "To deactivate the virtual environment:"
 echo "  deactivate"
