@@ -53,6 +53,7 @@ class TwitterFollowersScraper:
         self.model_name = model_name
         self.stagehand = None
         self.session_id = None
+        self.is_logged_in = False
         
     async def initialize(self) -> bool:
         """Initialize Stagehand with Browserbase configuration."""
@@ -96,6 +97,77 @@ class TwitterFollowersScraper:
             print(f"❌ Failed to initialize Stagehand: {e}")
             return False
     
+    async def login_to_twitter(self) -> bool:
+        """
+        Login to Twitter using provided credentials.
+        
+        Returns:
+            True if login successful, False otherwise
+        """
+        if not self.stagehand:
+            print("❌ Stagehand not initialized. Call initialize() first.")
+            return False
+        
+        page = self.stagehand.page
+        
+        try:
+            print("🔐 Logging into Twitter...")
+            
+            # Navigate to Twitter login page
+            await page.goto("https://twitter.com/login")
+            await asyncio.sleep(3)
+            
+            # Check if already logged in
+            current_url = page.url
+            if "home" in current_url or "twitter.com" in current_url and "login" not in current_url:
+                print("✅ Already logged into Twitter")
+                self.is_logged_in = True
+                return True
+            
+            # Get Twitter credentials from environment
+            twitter_username = os.getenv("TWITTER_USERNAME")
+            twitter_password = os.getenv("TWITTER_PASSWORD")
+            
+            if not twitter_username or not twitter_password:
+                print("❌ Missing Twitter credentials:")
+                print("   - TWITTER_USERNAME")
+                print("   - TWITTER_PASSWORD")
+                print("\n💡 Please add your Twitter credentials to your .env file.")
+                print("   Note: This is required to access follower lists.")
+                return False
+            
+            # Fill in username
+            print("📝 Entering username...")
+            await page.act(f"enter '{twitter_username}' in the username field")
+            await asyncio.sleep(1)
+            
+            # Click Next button
+            await page.act("click the Next button")
+            await asyncio.sleep(2)
+            
+            # Fill in password
+            print("🔑 Entering password...")
+            await page.act(f"enter '{twitter_password}' in the password field")
+            await asyncio.sleep(1)
+            
+            # Click Login button
+            await page.act("click the Log in button")
+            await asyncio.sleep(5)
+            
+            # Check if login was successful
+            current_url = page.url
+            if "home" in current_url or "twitter.com" in current_url and "login" not in current_url:
+                print("✅ Successfully logged into Twitter")
+                self.is_logged_in = True
+                return True
+            else:
+                print("❌ Login failed. Please check your credentials.")
+                return False
+                
+        except Exception as e:
+            print(f"❌ Error during Twitter login: {e}")
+            return False
+    
     async def scrape_followers(self, target_username: str, max_followers: Optional[int] = None) -> List[TwitterUser]:
         """
         Scrape followers from a Twitter profile using Stagehand.
@@ -110,6 +182,13 @@ class TwitterFollowersScraper:
         if not self.stagehand:
             print("❌ Stagehand not initialized. Call initialize() first.")
             return []
+        
+        # Ensure we're logged in before attempting to scrape
+        if not self.is_logged_in:
+            print("🔐 Twitter login required to access follower lists...")
+            if not await self.login_to_twitter():
+                print("❌ Cannot proceed without Twitter login")
+                return []
         
         followers = []
         page = self.stagehand.page
@@ -135,7 +214,19 @@ class TwitterFollowersScraper:
             # Navigate to followers page
             print("📋 Navigating to followers page...")
             await page.act("click on the 'Followers' link or button")
-            await asyncio.sleep(2)
+            await asyncio.sleep(3)
+            
+            # Check if we can access the followers page
+            followers_check = await page.observe("check if we can see the followers list")
+            followers_check_str = str(followers_check).lower()
+            if "login" in followers_check_str or "sign in" in followers_check_str or "not available" in followers_check_str:
+                print("❌ Cannot access followers list. This may be due to:")
+                print("   • Account privacy settings")
+                print("   • Twitter's anti-bot measures")
+                print("   • Login session expired")
+                return []
+            
+            print("✅ Successfully accessed followers page")
             
             # Scroll and collect followers
             print("🔄 Scrolling through followers and extracting data...")
@@ -333,6 +424,7 @@ async def main():
             print("• Profile is private or protected")
             print("• Twitter's anti-bot measures")
             print("• Network or authentication issues")
+            print("• Missing Twitter login credentials")
             return
         
         # Display top followers
@@ -352,6 +444,7 @@ async def main():
         print("• Check your internet connection")
         print("• Verify your .env file has correct credentials")
         print("• Ensure Browserbase account is active")
+        print("• Verify Twitter login credentials")
         print("• Try running the script again")
     finally:
         # Clean up
