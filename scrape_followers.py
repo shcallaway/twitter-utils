@@ -48,8 +48,8 @@ class TwitterFollowersList(BaseModel):
 class TwitterFollowersScraper:
     """A class to handle Twitter followers scraping using Stagehand."""
     
-    def __init__(self, model_name: str = "gpt-4o-mini"):
-        """Initialize the Stagehand scraper."""
+    def __init__(self, model_name: str = "gpt-5"):
+        """Initialize the Stagehand scraper with GPT-5 model."""
         self.model_name = model_name
         self.stagehand = None
         self.session_id = None
